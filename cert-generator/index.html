@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CertGen — Certificate Generator System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <span class="nav-logo">✦</span>
+    <span>CertGen</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('issue')">Issue Certificate</button>
+    <button class="nav-tab" onclick="showView('admin')">Admin Panel</button>
+    <button class="nav-tab" onclick="showView('verify')">Verify</button>
+  </div>
+</nav>
+
+<!-- ═══════════════ ISSUE VIEW ═══════════════ -->
+<div id="view-issue" class="view active">
+  <div class="page-header">
+    <h1>Issue a Certificate</h1>
+    <p>Fill in recipient details to generate a downloadable certificate.</p>
+  </div>
+
+  <div class="issue-layout">
+    <!-- FORM -->
+    <div class="form-panel">
+      <div class="field-group">
+        <label>Recipient Name <span class="req">*</span></label>
+        <input type="text" id="inp-name" placeholder="e.g. Priya Sharma" oninput="livePreview()">
+      </div>
+      <div class="field-group">
+        <label>Role / Title <span class="req">*</span></label>
+        <input type="text" id="inp-role" placeholder="e.g. Frontend Developer Intern" oninput="livePreview()">
+      </div>
+      <div class="field-group">
+        <label>Event / Internship Name <span class="req">*</span></label>
+        <input type="text" id="inp-event" placeholder="e.g. Summer Dev Bootcamp 2025" oninput="livePreview()">
+      </div>
+      <div class="field-group">
+        <label>Completion Date <span class="req">*</span></label>
+        <input type="date" id="inp-date" oninput="livePreview()">
+      </div>
+      <div class="field-group">
+        <label>Organisation / Issuer</label>
+        <input type="text" id="inp-org" placeholder="e.g. TechCorp Academy" value="TechCorp Academy" oninput="livePreview()">
+      </div>
+
+      <div class="id-row">
+        <div class="id-display">
+          <span class="id-label">Certificate ID</span>
+          <span class="id-value" id="cert-id-display">CERT---------</span>
+        </div>
+        <button class="btn-icon" onclick="refreshId()" title="Regenerate ID">↻</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="issueCertificate()">Generate &amp; Save</button>
+        <button class="btn-ghost" onclick="downloadPDF()">Download PDF</button>
+        <button class="btn-ghost" onclick="downloadPNG()">Download PNG</button>
+      </div>
+
+      <div id="form-msg" class="form-msg hidden"></div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="preview-panel">
+      <div class="preview-label">Live Preview</div>
+      <div class="cert-wrapper" id="cert-wrapper">
+        <div class="certificate" id="certificate">
+          <div class="cert-border-outer">
+            <div class="cert-border-inner">
+              <div class="cert-header">
+                <div class="cert-ornament">✦ ✦ ✦</div>
+                <div class="cert-title">Certificate of Completion</div>
+                <div class="cert-subtitle" id="prev-org">TechCorp Academy</div>
+              </div>
+              <div class="cert-body">
+                <p class="cert-presented">This is to certify that</p>
+                <h2 class="cert-name" id="prev-name">Recipient Name</h2>
+                <p class="cert-detail">has successfully completed the role of</p>
+                <p class="cert-role" id="prev-role">Role / Title</p>
+                <p class="cert-detail">in the programme</p>
+                <p class="cert-event" id="prev-event">Event / Internship Name</p>
+              </div>
+              <div class="cert-footer">
+                <div class="cert-date-block">
+                  <div class="cert-date" id="prev-date">—</div>
+                  <div class="cert-date-label">Date of Completion</div>
+                </div>
+                <div class="cert-seal">✦</div>
+                <div class="cert-sig-block">
+                  <div class="cert-sig-line"></div>
+                  <div class="cert-sig-label">Authorised Signature</div>
+                </div>
+              </div>
+              <div class="cert-id-row">
+                <div id="qr-preview" class="cert-qr"></div>
+                <span class="cert-id-text" id="prev-id">CERT---------</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ADMIN VIEW ═══════════════ -->
+<div id="view-admin" class="view">
+  <div class="page-header">
+    <h1>Admin Panel</h1>
+    <p>Manage all issued certificates.</p>
+  </div>
+
+  <div class="admin-toolbar">
+    <input type="text" id="admin-search" placeholder="Search by name, ID, or event…" oninput="renderTable()">
+    <div class="admin-stats">
+      <span class="stat-pill" id="stat-total">0 total</span>
+      <span class="stat-pill active" id="stat-active">0 active</span>
+      <span class="stat-pill revoked" id="stat-revoked">0 revoked</span>
+    </div>
+    <button class="btn-ghost" onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="cert-table">
+      <thead>
+        <tr>
+          <th>Certificate ID</th>
+          <th>Recipient</th>
+          <th>Role</th>
+          <th>Event</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="cert-table-body">
+        <tr class="empty-row"><td colspan="7">No certificates issued yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════ VERIFY VIEW ═══════════════ -->
+<div id="view-verify" class="view">
+  <div class="page-header">
+    <h1>Verify Certificate</h1>
+    <p>Enter a Certificate ID to check its authenticity.</p>
+  </div>
+
+  <div class="verify-box">
+    <div class="field-group">
+      <label>Certificate ID</label>
+      <div class="verify-input-row">
+        <input type="text" id="verify-input" placeholder="e.g. CERT-X7K2MN9P" style="text-transform:uppercase">
+        <button class="btn-primary" onclick="verifyCert()">Verify</button>
+      </div>
+    </div>
+    <div id="verify-result" class="verify-result hidden"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SCRIPTS ═══════════════ -->
+<script src="app.js"></script>
+</body>
+</html>
