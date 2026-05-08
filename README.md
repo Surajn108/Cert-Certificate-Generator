@@ -71,12 +71,12 @@ Each certificate record stored in localStorage:
 ```json
 {
   "id": "CERT-X7K2MN9P",
-  "name": "Priya Sharma",
+  "name": "Suraj Navale",
   "role": "Frontend Developer Intern",
-  "event": "Summer Dev Bootcamp 2025",
+  "event": "Summer Dev Bootcamp 2026",
   "org": "TechCorp Academy",
-  "date": "2025-08-15",
-  "issuedAt": "2025-08-16T10:30:00.000Z",
+  "date": "2026-05-15",
+  "issuedAt": "2026-05-16T10:30:00.000Z",
   "status": "active"
 }
 ```
