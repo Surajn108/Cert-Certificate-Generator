@@ -2,6 +2,7 @@
 
 A fully functional, single-page Certificate Generator with Admin Panel and QR-based verification.
 
+
 ## Features
 
 - **Issue certificates** with Name, Role, Event/Internship, Date, Organisation
